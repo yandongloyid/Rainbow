@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-import random
+import numpy as np
 import torch
 
 from agent import Agent
@@ -47,11 +47,11 @@ args = parser.parse_args()
 print(' ' * 26 + 'Options')
 for k, v in vars(args).items():
   print(' ' * 26 + k + ': ' + str(v))
-random.seed(args.seed)
-torch.manual_seed(random.randint(1, 10000))
+np.random.seed(args.seed)
+torch.manual_seed(np.random.randint(1, 10000))
 if torch.cuda.is_available() and not args.disable_cuda:
   args.device = torch.device('cuda')
-  torch.cuda.manual_seed(random.randint(1, 10000))
+  torch.cuda.manual_seed(np.random.randint(1, 10000))
   torch.backends.cudnn.enabled = False  # Disable nondeterministic ops (not sure if critical but better safe than sorry)
 else:
   args.device = torch.device('cpu')
@@ -81,7 +81,7 @@ while T < args.evaluation_size:
   if done:
     state, done = env.reset(), False
 
-  next_state, _, done = env.step(random.randint(0, action_space - 1))
+  next_state, _, done = env.step(np.random.randint(0, action_space - 1))
   val_mem.append(state, None, None, done)
   state = next_state
   T += 1

@@ -1,7 +1,6 @@
-import random
 from collections import namedtuple
-import torch
 import numpy as np
+import torch
 
 
 Transition = namedtuple('Transition', ('timestep', 'state', 'action', 'reward', 'nonterminal'))
@@ -14,8 +13,8 @@ class SegmentTree():
     self.index = 0
     self.size = size
     self.full = False  # Used to track actual capacity
-    self.sum_tree = [0] * (2 * size - 1)  # Initialise fixed size tree with all (priority) zeros
-    self.data = [None] * size  # Wrap-around cyclic buffer
+    self.sum_tree = np.zeros((2 * size - 1,), dtype=np.float32)  # Initialise fixed size tree with all (priority) zeros
+    self.data = np.array([None] * size)  # Wrap-around cyclic buffer
     self.max = 1  # Initial max value to return (1 = 1^ω)
 
   # Propagates value up tree given a tree index
@@ -82,7 +81,7 @@ class ReplayMemory():
 
   # Returns a transition with blank states where appropriate
   def _get_transition(self, idx):
-    transition = [None] * (self.history + self.n)
+    transition = np.array([None] * (self.history + self.n))
     transition[self.history - 1] = self.transitions.get(idx)
     for t in range(self.history - 2, -1, -1):  # e.g. 2 1 0
       if transition[t + 1].timestep == 0:
@@ -100,7 +99,7 @@ class ReplayMemory():
   def _get_sample_from_segment(self, segment, i):
     valid = False
     while not valid:
-      sample = random.uniform(i * segment, (i + 1) * segment)  # Uniformly sample an element from within a segment
+      sample = np.random.uniform(i * segment, (i + 1) * segment)  # Uniformly sample an element from within a segment
       prob, idx, tree_idx = self.transitions.find(sample)  # Retrieve sample from tree with un-normalised probability
       # Resample if transition straddled current index or probablity 0
       if (self.transitions.index - idx) % self.capacity > self.n and (idx - self.transitions.index) % self.capacity >= self.history and prob != 0:

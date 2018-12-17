@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 import numpy as np
 import torch
+from tqdm import tqdm
 
 from agent import Agent
 from env import Env
@@ -38,7 +39,6 @@ parser.add_argument('--evaluate', action='store_true', help='Evaluate only')
 parser.add_argument('--evaluation-interval', type=int, default=100000, metavar='STEPS', help='Number of training steps between evaluations')
 parser.add_argument('--evaluation-episodes', type=int, default=10, metavar='N', help='Number of evaluation episodes to average over')
 parser.add_argument('--evaluation-size', type=int, default=500, metavar='N', help='Number of transitions to use for validating Q')
-parser.add_argument('--log-interval', type=int, default=25000, metavar='STEPS', help='Number of training steps between logging status')
 parser.add_argument('--render', action='store_true', help='Display screen (testing only)')
 
 
@@ -94,7 +94,7 @@ else:
   # Training loop
   dqn.train()
   T, done = 0, True
-  while T < args.T_max:
+  for T in tqdm(range(args.T_max)):
     if done:
       state, done = env.reset(), False
     
@@ -107,9 +107,6 @@ else:
       reward = max(min(reward, args.reward_clip), -args.reward_clip)  # Clip rewards
     mem.append(state, action, reward, done)  # Append transition to memory
     T += 1
-
-    if T % args.log_interval == 0:
-      log('T = ' + str(T) + ' / ' + str(args.T_max))
 
     # Train and test
     if T >= args.learn_start:
